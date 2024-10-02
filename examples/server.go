@@ -31,7 +31,7 @@ func createTLSServer(certPath, keyPath, caPath string) (*net.Listener, error) {
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ClientCAs:    caCertPool,
-		// ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
 	}
 	ln, err := tls.Listen("tcp", ":8443", tlsConfig)
 	if err != nil {
