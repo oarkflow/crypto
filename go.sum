@@ -1,0 +1,6 @@
+github.com/oarkflow/paseto v0.0.0-20231006103046-f6852c552c83 h1:3VAVJCmtUoMemvgshkQl2HP80+6M4o8kLq6NtAXJcTw=
+github.com/oarkflow/paseto v0.0.0-20231006103046-f6852c552c83/go.mod h1:OSQERpM5KAg55QSZGGcehgMVqeJQ23GvV4oVRtN6aCA=
+golang.org/x/crypto v0.14.0 h1:wBqGXzWJW6m1XrIKlAH0Hs1JJ7+9KBwnIO8v66Q9cHc=
+golang.org/x/crypto v0.14.0/go.mod h1:MVFd36DqK4CsrnJYDkBA3VC4m2GkXAM0PvzMCn4JQf4=
+golang.org/x/sys v0.13.0 h1:Af8nKPmuFypiUBjVoU9V20FiaFXOcuZI21p0ycVYYGE=
+golang.org/x/sys v0.13.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
