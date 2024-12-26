@@ -6,9 +6,17 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 )
 
 var defaultGenerator *Generator
+
+var passwordBufferPool = sync.Pool{
+	New: func() interface{} {
+		// Initialize with a buffer of a maximum expected size (this can be tuned)
+		return make([]byte, 0, 128)
+	},
+}
 
 func init() {
 	defaultGenerator, _ = NewGenerator()
@@ -20,14 +28,23 @@ type Generator struct {
 }
 
 func (g *Generator) Generate() (string, error) {
-	password := make([]byte, g.opts.Length)
+	password := passwordBufferPool.Get().([]byte)
+	clear(password)
+	if cap(password) < g.opts.Length {
+		password = make([]byte, g.opts.Length)
+	} else {
+		password = password[:g.opts.Length]
+	}
+	poolLen := int64(len(g.pool))
 	for i := 0; i < g.opts.Length; i++ {
-		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(g.pool))))
+		index, err := rand.Int(rand.Reader, big.NewInt(poolLen))
 		if err != nil {
+			passwordBufferPool.Put(password)
 			return "", fmt.Errorf("failed to generate random index: %v", err)
 		}
 		password[i] = g.pool[index.Int64()]
 	}
+	defer passwordBufferPool.Put(password)
 	return string(password), nil
 }
 
@@ -47,7 +64,6 @@ func (g *Generator) Validate(password string) error {
 			hasSymbol = true
 		}
 	}
-
 	if g.opts.IncludeLower && !hasLower {
 		return errors.New("password does not include a lowercase character")
 	}
