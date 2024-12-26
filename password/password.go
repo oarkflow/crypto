@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/big"
 	"strings"
 	"sync"
 )
@@ -35,17 +34,19 @@ func (g *Generator) Generate() (string, error) {
 	} else {
 		password = password[:g.opts.Length]
 	}
-	poolLen := int64(len(g.pool))
+	poolLen := len(g.pool)
 	for i := 0; i < g.opts.Length; i++ {
-		index, err := rand.Int(rand.Reader, big.NewInt(poolLen))
+		randomByte := make([]byte, 1)
+		_, err := rand.Read(randomByte)
 		if err != nil {
 			passwordBufferPool.Put(password)
 			return "", fmt.Errorf("failed to generate random index: %v", err)
 		}
-		password[i] = g.pool[index.Int64()]
+		index := int(randomByte[0]) % poolLen
+		password[i] = g.pool[index]
 	}
 	defer passwordBufferPool.Put(password)
-	return string(password), nil
+	return string(password[:]), nil
 }
 
 func (g *Generator) Validate(password string) error {
