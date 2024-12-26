@@ -1,11 +1,11 @@
 package password
 
 import (
-	"crypto/rand"
 	"errors"
-	"fmt"
+	"math/rand"
 	"strings"
 	"sync"
+	"time"
 )
 
 var defaultGenerator *Generator
@@ -27,6 +27,7 @@ type Generator struct {
 }
 
 func (g *Generator) Generate() (string, error) {
+	rand.Seed(time.Now().UnixNano())
 	password := passwordBufferPool.Get().([]byte)
 	clear(password)
 	if cap(password) < g.opts.Length {
@@ -36,14 +37,7 @@ func (g *Generator) Generate() (string, error) {
 	}
 	poolLen := len(g.pool)
 	for i := 0; i < g.opts.Length; i++ {
-		randomByte := make([]byte, 1)
-		_, err := rand.Read(randomByte)
-		if err != nil {
-			passwordBufferPool.Put(password)
-			return "", fmt.Errorf("failed to generate random index: %v", err)
-		}
-		index := int(randomByte[0]) % poolLen
-		password[i] = g.pool[index]
+		password[i] = g.pool[rand.Intn(poolLen)]
 	}
 	defer passwordBufferPool.Put(password)
 	return string(password[:]), nil
