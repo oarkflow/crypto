@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/oarkflow/cli"
 	"github.com/oarkflow/cli/contracts"
@@ -15,11 +17,13 @@ func main() {
 	client := app.Instance.Client()
 	client.Register([]contracts.Command{
 		NewListCommand(client),
+		ListCertsCommand{},
 		GenCACommand{},
 		GenServerCommand{},
 		GenClientCommand{},
 		GenCodeSignCommand{},
 		GenCRLCommand{},
+		VerifyCRLCommand{},
 		SignCommand{},
 		VerifyCommand{},
 		SignTextCommand{},
@@ -503,5 +507,73 @@ func (cmd ValidateCommand) Handle(ctx contracts.Context) error {
 		CACertFile:     ctx.Option("ca"),
 	}
 	crypto.ValidateClientCertificateWithParams(params)
+	return nil
+}
+
+type VerifyCRLCommand struct{}
+
+func (cmd VerifyCRLCommand) Signature() string {
+	return "verify-crl"
+}
+
+func (cmd VerifyCRLCommand) Description() string {
+	return "Verify if a certificate is revoked using a given CRL"
+}
+
+func (cmd VerifyCRLCommand) Extend() contracts.Extend {
+	return contracts.Extend{
+		Category: "CRL",
+		Flags: []contracts.Flag{
+			{Name: "cert", Usage: "Certificate file to check", Value: ""},
+			{Name: "crl", Usage: "CRL file", Value: "ca.crl"},
+		},
+	}
+}
+
+func (cmd VerifyCRLCommand) Handle(ctx contracts.Context) error {
+	certFile := ctx.Option("cert")
+	crlFile := ctx.Option("crl")
+	if certFile == "" || crlFile == "" {
+		return fmt.Errorf("please provide both a certificate file (--cert) and a CRL file (--crl)")
+	}
+	err := crypto.VerifyCertificateRevocationStatus(certFile, crlFile)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Certificate is not revoked according to the provided CRL.")
+	return nil
+}
+
+type ListCertsCommand struct{}
+
+func (cmd ListCertsCommand) Signature() string {
+	return "list-certs"
+}
+
+func (cmd ListCertsCommand) Description() string {
+	return "List certificate details for provided certificate files (comma separated)"
+}
+
+func (cmd ListCertsCommand) Extend() contracts.Extend {
+	return contracts.Extend{
+		Category: "Certificate",
+		Flags: []contracts.Flag{
+			{Name: "files", Usage: "Comma-separated list of certificate files", Value: ""},
+		},
+	}
+}
+
+func (cmd ListCertsCommand) Handle(ctx contracts.Context) error {
+	filesStr := ctx.Option("files")
+	if filesStr == "" {
+		return fmt.Errorf("please provide certificate file names using --files")
+	}
+	files := strings.Split(filesStr, ",")
+	for _, f := range files {
+		f = strings.TrimSpace(f)
+		fmt.Printf("----- Certificate: %s -----\n", f)
+		params := crypto.InspectParams{CertFile: f}
+		crypto.InspectCertificateWithParams(params)
+	}
 	return nil
 }

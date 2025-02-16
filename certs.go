@@ -788,3 +788,28 @@ func inspectCertificate(filename string) error {
 	fmt.Printf("  Key Usage : %v\n", cert.KeyUsage)
 	return nil
 }
+
+func VerifyCertificateRevocationStatus(certFile, crlFile string) error {
+	cert, err := loadCertificate(certFile)
+	if err != nil {
+		return err
+	}
+	crlData, err := os.ReadFile(crlFile)
+	if err != nil {
+		return err
+	}
+	block, _ := pem.Decode(crlData)
+	if block == nil {
+		return fmt.Errorf("failed to decode PEM from CRL file %s", crlFile)
+	}
+	crl, err := x509.ParseRevocationList(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse CRL: %v", err)
+	}
+	for _, revoked := range crl.RevokedCertificates {
+		if revoked.SerialNumber.Cmp(cert.SerialNumber) == 0 {
+			return fmt.Errorf("certificate %s is revoked", certFile)
+		}
+	}
+	return nil
+}
