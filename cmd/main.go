@@ -214,7 +214,7 @@ func (cmd GenCodeSignCommand) Handle(ctx contracts.Context) error {
 		CACertFile: ctx.Option("ca"),
 		CAKeyFile:  ctx.Option("cakey"),
 		CommonName: ctx.Option("cn"),
-		RSA_Bits:   rsaBits,
+		RsaBits:    rsaBits,
 		CertOut:    ctx.Option("cert"),
 		KeyOut:     ctx.Option("key"),
 	}

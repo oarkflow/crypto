@@ -218,7 +218,7 @@ type CodeSignParams struct {
 	CACertFile string
 	CAKeyFile  string
 	CommonName string
-	RSA_Bits   int
+	RsaBits    int
 	CertOut    string
 	KeyOut     string
 }
@@ -232,7 +232,7 @@ func GenerateCodeSignWithParams(params CodeSignParams) {
 	if err != nil {
 		log.Fatalf("Failed to load CA private key: %v", err)
 	}
-	certDER, csKey := generateCodeSigningCert(caCert, caKey, params.RSA_Bits, params.CommonName)
+	certDER, csKey := generateCodeSigningCert(caCert, caKey, params.RsaBits, params.CommonName)
 	saveCertificate(params.CertOut, certDER)
 	savePrivateKey(params.KeyOut, csKey)
 	signFileContent(params.CertOut, caKey)
