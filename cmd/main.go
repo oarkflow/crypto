@@ -56,7 +56,7 @@ func (receiver *ListCommand) Extend() contracts.Extend {
 }
 
 // Handle Execute the console command.
-func (receiver *ListCommand) Handle(ctx contracts.Context) error {
+func (receiver *ListCommand) Handle(_ contracts.Context) error {
 	receiver.app.Call("--help")
 
 	return nil
