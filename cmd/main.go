@@ -100,8 +100,7 @@ func (cmd GenCACommand) Handle(ctx contracts.Context) error {
 		CertOut:          ctx.Option("cert"),
 		KeyOut:           ctx.Option("key"),
 	}
-	crypto.GenerateCAWithParams(params)
-	return nil
+	return crypto.GenerateCAWithParams(params)
 }
 
 // GenServerCommand implements the "gen-server" command.
@@ -144,8 +143,7 @@ func (cmd GenServerCommand) Handle(ctx contracts.Context) error {
 		CertOut:    ctx.Option("cert"),
 		KeyOut:     ctx.Option("key"),
 	}
-	crypto.GenerateServerWithParams(params)
-	return nil
+	return crypto.GenerateServerWithParams(params)
 }
 
 // GenClientCommand implements the "gen-client" command.
@@ -180,8 +178,7 @@ func (cmd GenClientCommand) Handle(ctx contracts.Context) error {
 		CertOut:    ctx.Option("cert"),
 		KeyOut:     ctx.Option("key"),
 	}
-	crypto.GenerateClientWithParams(params)
-	return nil
+	return crypto.GenerateClientWithParams(params)
 }
 
 // GenCodeSignCommand implements the "gen-code-sign" command.
@@ -222,8 +219,7 @@ func (cmd GenCodeSignCommand) Handle(ctx contracts.Context) error {
 		CertOut:    ctx.Option("cert"),
 		KeyOut:     ctx.Option("key"),
 	}
-	crypto.GenerateCodeSignWithParams(params)
-	return nil
+	return crypto.GenerateCodeSignWithParams(params)
 }
 
 // GenCRLCommand implements the "gen-crl" command.
@@ -256,8 +252,7 @@ func (cmd GenCRLCommand) Handle(ctx contracts.Context) error {
 		Revoked:    ctx.Option("revoked"),
 		CRLOut:     ctx.Option("crl"),
 	}
-	crypto.GenerateCRLWithParams(params)
-	return nil
+	return crypto.GenerateCRLWithParams(params)
 }
 
 // SignCommand implements the "sign" command.
@@ -288,8 +283,7 @@ func (cmd SignCommand) Handle(ctx contracts.Context) error {
 		KeyFile:    ctx.Option("key"),
 		OutSig:     ctx.Option("out"),
 	}
-	crypto.SignFileWithParams(params)
-	return nil
+	return crypto.SignFileWithParams(params)
 }
 
 // VerifyCommand implements the "verify" command.
@@ -320,8 +314,7 @@ func (cmd VerifyCommand) Handle(ctx contracts.Context) error {
 		SigFile:      ctx.Option("sig"),
 		CertFile:     ctx.Option("cert"),
 	}
-	crypto.VerifyFileSignatureWithParams(params)
-	return nil
+	return crypto.VerifyFileSignatureWithParams(params)
 }
 
 // SignTextCommand implements the "sign-text" command.
@@ -352,8 +345,7 @@ func (cmd SignTextCommand) Handle(ctx contracts.Context) error {
 		Text:    ctx.Option("text"),
 		OutSig:  ctx.Option("out"),
 	}
-	crypto.SignTextWithParams(params)
-	return nil
+	return crypto.SignTextWithParams(params)
 }
 
 // VerifyTextCommand implements the "verify-text" command.
@@ -384,8 +376,7 @@ func (cmd VerifyTextCommand) Handle(ctx contracts.Context) error {
 		Text:      ctx.Option("text"),
 		Signature: ctx.Option("sig"),
 	}
-	crypto.VerifyTextWithParams(params)
-	return nil
+	return crypto.VerifyTextWithParams(params)
 }
 
 // SignJSONCommand implements the "sign-json" command.
@@ -416,8 +407,7 @@ func (cmd SignJSONCommand) Handle(ctx contracts.Context) error {
 		JSONStr: ctx.Option("json"),
 		OutSig:  ctx.Option("out"),
 	}
-	crypto.SignJSONWithParams(params)
-	return nil
+	return crypto.SignJSONWithParams(params)
 }
 
 // VerifyJSONCommand implements the "verify-json" command.
@@ -448,8 +438,7 @@ func (cmd VerifyJSONCommand) Handle(ctx contracts.Context) error {
 		JSONStr:   ctx.Option("json"),
 		Signature: ctx.Option("sig"),
 	}
-	crypto.VerifyJSONWithParams(params)
-	return nil
+	return crypto.VerifyJSONWithParams(params)
 }
 
 // InspectCommand implements the "inspect" command.
@@ -476,8 +465,7 @@ func (cmd InspectCommand) Handle(ctx contracts.Context) error {
 	params := crypto.InspectParams{
 		CertFile: ctx.Option("cert"),
 	}
-	crypto.InspectCertificateWithParams(params)
-	return nil
+	return crypto.InspectCertificateWithParams(params)
 }
 
 // ValidateCommand implements the "validate" command.
@@ -506,8 +494,7 @@ func (cmd ValidateCommand) Handle(ctx contracts.Context) error {
 		ClientCertFile: ctx.Option("cert"),
 		CACertFile:     ctx.Option("ca"),
 	}
-	crypto.ValidateClientCertificateWithParams(params)
-	return nil
+	return crypto.ValidateClientCertificateWithParams(params)
 }
 
 type VerifyCRLCommand struct{}
@@ -573,7 +560,10 @@ func (cmd ListCertsCommand) Handle(ctx contracts.Context) error {
 		f = strings.TrimSpace(f)
 		fmt.Printf("----- Certificate: %s -----\n", f)
 		params := crypto.InspectParams{CertFile: f}
-		crypto.InspectCertificateWithParams(params)
+		err := crypto.InspectCertificateWithParams(params)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

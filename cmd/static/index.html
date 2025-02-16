@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Certificate Manager</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="container">
+    <h1>Certificate Manager</h1>
+    <div class="tabs">
+        <!-- Navigation Tabs -->
+        <button class="tablink" onclick="openTab(event, 'gen-ca')">Generate CA</button>
+        <button class="tablink" onclick="openTab(event, 'gen-server')">Generate Server</button>
+        <button class="tablink" onclick="openTab(event, 'gen-client')">Generate Client</button>
+        <button class="tablink" onclick="openTab(event, 'gen-code-sign')">Code Sign Cert</button>
+        <button class="tablink" onclick="openTab(event, 'gen-crl')">Generate CRL</button>
+        <button class="tablink" onclick="openTab(event, 'verify-crl')">Verify CRL</button>
+        <button class="tablink" onclick="openTab(event, 'sign')">Sign File</button>
+        <button class="tablink" onclick="openTab(event, 'verify')">Verify File</button>
+        <button class="tablink" onclick="openTab(event, 'sign-text')">Sign Text</button>
+        <button class="tablink" onclick="openTab(event, 'verify-text')">Verify Text</button>
+        <button class="tablink" onclick="openTab(event, 'sign-json')">Sign JSON</button>
+        <button class="tablink" onclick="openTab(event, 'verify-json')">Verify JSON</button>
+        <button class="tablink" onclick="openTab(event, 'inspect')">Inspect Cert</button>
+        <button class="tablink" onclick="openTab(event, 'list-certs')">List Certs</button>
+        <button class="tablink" onclick="openTab(event, 'validate')">Validate Cert</button>
+    </div>
+
+    <!-- Result display -->
+    <div id="response"></div>
+
+    <!-- Tab content for Generate CA -->
+    <div id="gen-ca" class="tabcontent">
+        <h2>Generate CA Certificate</h2>
+        <form id="genCAForm">
+            <label>Organization:</label>
+            <input type="text" name="OrganizationName" value="My Company" /><br />
+            <label>Country:</label>
+            <input type="text" name="Country" value="NP" /><br />
+            <label>Curve:</label>
+            <input type="text" name="Curve" value="P384" /><br />
+            <label>Common Name:</label>
+            <input type="text" name="CommonName" value="My Secure CA" /><br />
+            <label>Cert Out:</label>
+            <input type="text" name="CertOut" value="ca.crt" /><br />
+            <label>Key Out:</label>
+            <input type="text" name="KeyOut" value="ca.key" /><br />
+            <button type="button" onclick="submitForm('genCAForm', '/api/gen-ca')">Generate CA</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Generate Server Certificate -->
+    <div id="gen-server" class="tabcontent">
+        <h2>Generate Server Certificate</h2>
+        <form id="genServerForm">
+            <label>CA Certificate File:</label>
+            <input type="text" name="CACertFile" value="ca.crt" /><br />
+            <label>CA Key File:</label>
+            <input type="text" name="CAKeyFile" value="ca.key" /><br />
+            <label>Key Type:</label>
+            <input type="text" name="KeyType" value="ECDSA" /><br />
+            <label>Param (Curve or RSA bits):</label>
+            <input type="text" name="Param" value="P256" /><br />
+            <label>Common Name:</label>
+            <input type="text" name="CommonName" value="server.example.com" /><br />
+            <label>DNS Names (comma separated):</label>
+            <input type="text" name="DNSNames" value="localhost,server.example.com" /><br />
+            <label>IP List (comma separated):</label>
+            <input type="text" name="IPList" value="127.0.0.1" /><br />
+            <label>Cert Out:</label>
+            <input type="text" name="CertOut" value="server.crt" /><br />
+            <label>Key Out:</label>
+            <input type="text" name="KeyOut" value="server.key" /><br />
+            <button type="button" onclick="submitForm('genServerForm', '/api/gen-server')">Generate Server Cert</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Generate Client Certificate -->
+    <div id="gen-client" class="tabcontent">
+        <h2>Generate Client Certificate</h2>
+        <form id="genClientForm">
+            <label>CA Certificate File:</label>
+            <input type="text" name="CACertFile" value="ca.crt" /><br />
+            <label>CA Key File:</label>
+            <input type="text" name="CAKeyFile" value="ca.key" /><br />
+            <label>Common Name:</label>
+            <input type="text" name="CommonName" value="client-user" /><br />
+            <label>Cert Out:</label>
+            <input type="text" name="CertOut" value="client.crt" /><br />
+            <label>Key Out:</label>
+            <input type="text" name="KeyOut" value="client.key" /><br />
+            <button type="button" onclick="submitForm('genClientForm', '/api/gen-client')">Generate Client Cert</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Generate Code Signing Certificate -->
+    <div id="gen-code-sign" class="tabcontent">
+        <h2>Generate Code Signing Certificate</h2>
+        <form id="genCodeSignForm">
+            <label>CA Certificate File:</label>
+            <input type="text" name="CACertFile" value="ca.crt" /><br />
+            <label>CA Key File:</label>
+            <input type="text" name="CAKeyFile" value="ca.key" /><br />
+            <label>Common Name:</label>
+            <input type="text" name="CommonName" value="file-signer" /><br />
+            <label>RSA Bits:</label>
+            <input type="text" name="RsaBits" value="2048" /><br />
+            <label>Cert Out:</label>
+            <input type="text" name="CertOut" value="code_sign.crt" /><br />
+            <label>Key Out:</label>
+            <input type="text" name="KeyOut" value="code_sign.key" /><br />
+            <button type="button" onclick="submitForm('genCodeSignForm', '/api/gen-code-sign')">Generate Code Sign Cert</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Generate CRL -->
+    <div id="gen-crl" class="tabcontent">
+        <h2>Generate CRL</h2>
+        <form id="genCRLForm">
+            <label>CA Certificate File:</label>
+            <input type="text" name="CACertFile" value="ca.crt" /><br />
+            <label>CA Key File:</label>
+            <input type="text" name="CAKeyFile" value="ca.key" /><br />
+            <label>Revoked (comma separated):</label>
+            <input type="text" name="Revoked" value="" /><br />
+            <label>CRL Out:</label>
+            <input type="text" name="CRLOut" value="ca.crl" /><br />
+            <button type="button" onclick="submitForm('genCRLForm', '/api/gen-crl')">Generate CRL</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Verify CRL -->
+    <div id="verify-crl" class="tabcontent">
+        <h2>Verify CRL</h2>
+        <form id="verifyCRLForm">
+            <label>Certificate File:</label>
+            <input type="text" name="CertFile" value="" /><br />
+            <label>CRL File:</label>
+            <input type="text" name="CRLFile" value="ca.crl" /><br />
+            <button type="button" onclick="submitForm('verifyCRLForm', '/api/verify-crl')">Verify CRL</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Sign File -->
+    <div id="sign" class="tabcontent">
+        <h2>Sign a File</h2>
+        <form id="signForm">
+            <label>File To Sign:</label>
+            <input type="text" name="FileToSign" value="" /><br />
+            <label>Private Key File:</label>
+            <input type="text" name="KeyFile" value="" /><br />
+            <label>Signature Out (optional):</label>
+            <input type="text" name="OutSig" value="" /><br />
+            <button type="button" onclick="submitForm('signForm', '/api/sign')">Sign File</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Verify File -->
+    <div id="verify" class="tabcontent">
+        <h2>Verify a File Signature</h2>
+        <form id="verifyForm">
+            <label>File To Verify:</label>
+            <input type="text" name="FileToVerify" value="" /><br />
+            <label>Signature File:</label>
+            <input type="text" name="SigFile" value="" /><br />
+            <label>Certificate File:</label>
+            <input type="text" name="CertFile" value="" /><br />
+            <button type="button" onclick="submitForm('verifyForm', '/api/verify')">Verify File</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Sign Text -->
+    <div id="sign-text" class="tabcontent">
+        <h2>Sign Text</h2>
+        <form id="signTextForm">
+            <label>Private Key File:</label>
+            <input type="text" name="KeyFile" value="" /><br />
+            <label>Text to Sign:</label>
+            <textarea name="Text" rows="4" cols="50"></textarea><br />
+            <label>Signature Out (optional):</label>
+            <input type="text" name="OutSig" value="" /><br />
+            <button type="button" onclick="submitForm('signTextForm', '/api/sign-text')">Sign Text</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Verify Text -->
+    <div id="verify-text" class="tabcontent">
+        <h2>Verify Text Signature</h2>
+        <form id="verifyTextForm">
+            <label>Certificate File:</label>
+            <input type="text" name="CertFile" value="" /><br />
+            <label>Text to Verify:</label>
+            <textarea name="Text" rows="4" cols="50"></textarea><br />
+            <label>Signature (base64):</label>
+            <input type="text" name="Signature" value="" /><br />
+            <button type="button" onclick="submitForm('verifyTextForm', '/api/verify-text')">Verify Text</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Sign JSON -->
+    <div id="sign-json" class="tabcontent">
+        <h2>Sign JSON Data</h2>
+        <form id="signJSONForm">
+            <label>Private Key File:</label>
+            <input type="text" name="KeyFile" value="" /><br />
+            <label>JSON String to Sign:</label>
+            <textarea name="JSONStr" rows="4" cols="50"></textarea><br />
+            <label>Signature Out (optional):</label>
+            <input type="text" name="OutSig" value="" /><br />
+            <button type="button" onclick="submitForm('signJSONForm', '/api/sign-json')">Sign JSON</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Verify JSON -->
+    <div id="verify-json" class="tabcontent">
+        <h2>Verify JSON Signature</h2>
+        <form id="verifyJSONForm">
+            <label>Certificate File:</label>
+            <input type="text" name="CertFile" value="" /><br />
+            <label>JSON String to Verify:</label>
+            <textarea name="JSONStr" rows="4" cols="50"></textarea><br />
+            <label>Signature (base64):</label>
+            <input type="text" name="Signature" value="" /><br />
+            <button type="button" onclick="submitForm('verifyJSONForm', '/api/verify-json')">Verify JSON</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Inspect Certificate -->
+    <div id="inspect" class="tabcontent">
+        <h2>Inspect Certificate</h2>
+        <form id="inspectForm">
+            <label>Certificate File:</label>
+            <input type="text" name="CertFile" value="" /><br />
+            <button type="button" onclick="submitForm('inspectForm', '/api/inspect')">Inspect</button>
+        </form>
+    </div>
+
+    <!-- Tab content for List Certificates -->
+    <div id="list-certs" class="tabcontent">
+        <h2>List Certificates</h2>
+        <form id="listCertsForm">
+            <label>Certificate Files (comma separated):</label>
+            <input type="text" name="Files" value="" /><br />
+            <button type="button" onclick="submitForm('listCertsForm', '/api/list-certs')">List Certs</button>
+        </form>
+    </div>
+
+    <!-- Tab content for Validate Certificate -->
+    <div id="validate" class="tabcontent">
+        <h2>Validate Client Certificate</h2>
+        <form id="validateForm">
+            <label>Client Certificate File:</label>
+            <input type="text" name="ClientCertFile" value="" /><br />
+            <label>CA Certificate File:</label>
+            <input type="text" name="CACertFile" value="" /><br />
+            <button type="button" onclick="submitForm('validateForm', '/api/validate')">Validate</button>
+        </form>
+    </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

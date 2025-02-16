@@ -16,7 +16,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"log"
 	"math/big"
 	"net"
 	"os"
@@ -125,13 +124,26 @@ type CAParams struct {
 	KeyOut           string
 }
 
-func GenerateCAWithParams(params CAParams) {
-	certDER, caKey := generateCA(params)
-	saveCertificate(params.CertOut, certDER)
-	savePrivateKey(params.KeyOut, caKey)
+func GenerateCAWithParams(params CAParams) error {
+	certDER, caKey, err := generateCA(params)
+	if err != nil {
+		return err
+	}
+	err = saveCertificate(params.CertOut, certDER)
+	if err != nil {
+		return err
+	}
+	err = savePrivateKey(params.KeyOut, caKey)
+	if err != nil {
+		return err
+	}
 
-	signFileContent(params.CertOut, caKey)
+	err = signFileContent(params.CertOut, caKey)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("CA certificate and key saved as %s and %s\n", params.CertOut, params.KeyOut)
+	return nil
 }
 
 type ServerParams struct {
@@ -146,14 +158,14 @@ type ServerParams struct {
 	KeyOut     string
 }
 
-func GenerateServerWithParams(params ServerParams) {
+func GenerateServerWithParams(params ServerParams) error {
 	caCert, err := loadCertificate(params.CACertFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA certificate: %v", err)
+		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
 	caKey, err := loadPrivateKey(params.CAKeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA private key: %v", err)
+		return fmt.Errorf("failed to load CA private key: %v", err)
 	}
 
 	dnsNames := strings.Split(params.DNSNames, ",")
@@ -175,18 +187,31 @@ func GenerateServerWithParams(params ServerParams) {
 	} else if strings.ToUpper(params.KeyType) == "RSA" {
 		bits, err := strconv.Atoi(params.Param)
 		if err != nil {
-			log.Fatalf("Invalid RSA bits parameter: %v", err)
+			return fmt.Errorf("invalid RSA bits parameter: %v", err)
 		}
 		curveOrBits = bits
 	} else {
-		log.Fatal("Unsupported key type. Choose ECDSA or RSA.")
+		return errors.New("unsupported key type. Choose ECDSA or RSA")
 	}
 
-	certDER, srvKey := generateServerCert(caCert, caKey, params.KeyType, curveOrBits, params.CommonName, dnsNames, ips)
-	saveCertificate(params.CertOut, certDER)
-	savePrivateKey(params.KeyOut, srvKey)
-	signFileContent(params.CertOut, caKey)
+	certDER, srvKey, err := generateServerCert(caCert, caKey, params.KeyType, curveOrBits, params.CommonName, dnsNames, ips)
+	if err != nil {
+		return err
+	}
+	err = saveCertificate(params.CertOut, certDER)
+	if err != nil {
+		return err
+	}
+	err = savePrivateKey(params.KeyOut, srvKey)
+	if err != nil {
+		return err
+	}
+	err = signFileContent(params.CertOut, caKey)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("Server certificate and key saved as %s and %s\n", params.CertOut, params.KeyOut)
+	return nil
 }
 
 type ClientParams struct {
@@ -197,21 +222,34 @@ type ClientParams struct {
 	KeyOut     string
 }
 
-func GenerateClientWithParams(params ClientParams) {
+func GenerateClientWithParams(params ClientParams) error {
 	caCert, err := loadCertificate(params.CACertFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA certificate: %v", err)
+		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
 	caKey, err := loadPrivateKey(params.CAKeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA private key: %v", err)
+		return fmt.Errorf("failed to load CA private key: %v", err)
 	}
 
-	certDER, clientKey := generateClientCert(caCert, caKey, params.CommonName)
-	saveCertificate(params.CertOut, certDER)
-	savePrivateKey(params.KeyOut, clientKey)
-	signFileContent(params.CertOut, caKey)
+	certDER, clientKey, err := generateClientCert(caCert, caKey, params.CommonName)
+	if err != nil {
+		return err
+	}
+	err = saveCertificate(params.CertOut, certDER)
+	if err != nil {
+		return err
+	}
+	err = savePrivateKey(params.KeyOut, clientKey)
+	if err != nil {
+		return err
+	}
+	err = signFileContent(params.CertOut, caKey)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("Client certificate and key saved as %s and %s\n", params.CertOut, params.KeyOut)
+	return nil
 }
 
 type CodeSignParams struct {
@@ -223,20 +261,33 @@ type CodeSignParams struct {
 	KeyOut     string
 }
 
-func GenerateCodeSignWithParams(params CodeSignParams) {
+func GenerateCodeSignWithParams(params CodeSignParams) error {
 	caCert, err := loadCertificate(params.CACertFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA certificate: %v", err)
+		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
 	caKey, err := loadPrivateKey(params.CAKeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA private key: %v", err)
+		return fmt.Errorf("failed to load CA private key: %v", err)
 	}
-	certDER, csKey := generateCodeSigningCert(caCert, caKey, params.RsaBits, params.CommonName)
-	saveCertificate(params.CertOut, certDER)
-	savePrivateKey(params.KeyOut, csKey)
-	signFileContent(params.CertOut, caKey)
+	certDER, csKey, err := generateCodeSigningCert(caCert, caKey, params.RsaBits, params.CommonName)
+	if err != nil {
+		return err
+	}
+	err = saveCertificate(params.CertOut, certDER)
+	if err != nil {
+		return err
+	}
+	err = savePrivateKey(params.KeyOut, csKey)
+	if err != nil {
+		return err
+	}
+	err = signFileContent(params.CertOut, caKey)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("Code-signing certificate and key saved as %s and %s\n", params.CertOut, params.KeyOut)
+	return nil
 }
 
 type CRLParams struct {
@@ -246,9 +297,9 @@ type CRLParams struct {
 	CRLOut     string
 }
 
-func GenerateCRLWithParams(params CRLParams) {
+func GenerateCRLWithParams(params CRLParams) error {
 	if params.Revoked == "" {
-		log.Fatal("Please provide at least one revoked certificate serial number")
+		return fmt.Errorf("please provide at least one revoked certificate serial number")
 	}
 	var revokedCerts []pkix.RevokedCertificate
 	for _, s := range strings.Split(params.Revoked, ",") {
@@ -256,7 +307,7 @@ func GenerateCRLWithParams(params CRLParams) {
 		serial := new(big.Int)
 		_, ok := serial.SetString(s, 10)
 		if !ok {
-			log.Fatalf("Invalid serial number: %s", s)
+			return fmt.Errorf("invalid serial number: %s", s)
 		}
 		revokedCerts = append(revokedCerts, pkix.RevokedCertificate{
 			SerialNumber:   serial,
@@ -266,17 +317,27 @@ func GenerateCRLWithParams(params CRLParams) {
 
 	caCert, err := loadCertificate(params.CACertFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA certificate: %v", err)
+		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
 	caKey, err := loadPrivateKey(params.CAKeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load CA private key: %v", err)
+		return fmt.Errorf("failed to load CA private key: %v", err)
 	}
 
-	crlBytes := generateCRL(caCert, caKey, revokedCerts)
-	saveCRL(params.CRLOut, crlBytes)
-	signFileContent(params.CRLOut, caKey)
+	crlBytes, err := generateCRL(caCert, caKey, revokedCerts)
+	if err != nil {
+		return err
+	}
+	err = saveCRL(params.CRLOut, crlBytes)
+	if err != nil {
+		return err
+	}
+	err = signFileContent(params.CRLOut, caKey)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("CRL saved as %s\n", params.CRLOut)
+	return nil
 }
 
 type SignParams struct {
@@ -285,18 +346,18 @@ type SignParams struct {
 	OutSig     string
 }
 
-func SignFileWithParams(params SignParams) {
+func SignFileWithParams(params SignParams) error {
 	signer, err := loadPrivateKey(params.KeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load private key: %v", err)
+		return fmt.Errorf("failed to load private key: %v", err)
 	}
 	data, err := os.ReadFile(params.FileToSign)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		return fmt.Errorf("failed to read file: %v", err)
 	}
 	sig, err := signData(data, signer)
 	if err != nil {
-		log.Fatalf("Failed to sign data: %v", err)
+		return fmt.Errorf("failed to sign data: %v", err)
 	}
 	outSig := params.OutSig
 	if outSig == "" {
@@ -304,9 +365,10 @@ func SignFileWithParams(params SignParams) {
 	}
 	err = os.WriteFile(outSig, sig, 0644)
 	if err != nil {
-		log.Fatalf("Failed to write signature file: %v", err)
+		return fmt.Errorf("failed to write signature file: %v", err)
 	}
 	fmt.Printf("File %s signed successfully. Signature saved to %s\n", params.FileToSign, outSig)
+	return nil
 }
 
 type VerifyParams struct {
@@ -315,16 +377,17 @@ type VerifyParams struct {
 	CertFile     string
 }
 
-func VerifyFileSignatureWithParams(params VerifyParams) {
+func VerifyFileSignatureWithParams(params VerifyParams) error {
 	cert, err := loadCertificate(params.CertFile)
 	if err != nil {
-		log.Fatalf("Failed to load certificate: %v", err)
+		return fmt.Errorf("failed to load certificate: %v", err)
 	}
 	err = verifyFileContentSignature(params.FileToVerify, params.SigFile, cert.PublicKey)
 	if err != nil {
-		log.Fatalf("Signature verification failed: %v", err)
+		return fmt.Errorf("signature verification failed: %v", err)
 	}
 	fmt.Println("Signature verification succeeded.")
+	return nil
 }
 
 type SignTextParams struct {
@@ -333,26 +396,27 @@ type SignTextParams struct {
 	OutSig  string
 }
 
-func SignTextWithParams(params SignTextParams) {
+func SignTextWithParams(params SignTextParams) error {
 	signer, err := loadPrivateKey(params.KeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load private key: %v", err)
+		return fmt.Errorf("failed to load private key: %v", err)
 	}
 	dss := NewDigitalSignatureService(signer)
 	sig, err := dss.SignText(params.Text)
 	if err != nil {
-		log.Fatalf("Failed to sign text: %v", err)
+		return fmt.Errorf("failed to sign text: %v", err)
 	}
 	encodedSig := encodeBase64(sig)
 	if params.OutSig != "" {
 		err = os.WriteFile(params.OutSig, []byte(encodedSig), 0644)
 		if err != nil {
-			log.Fatalf("Failed to write signature to file: %v", err)
+			return fmt.Errorf("failed to write signature to file: %v", err)
 		}
 		fmt.Printf("Text signature saved to %s\n", params.OutSig)
 	} else {
 		fmt.Printf("Text Signature (base64): %s\n", encodedSig)
 	}
+	return nil
 }
 
 type VerifyTextParams struct {
@@ -361,21 +425,22 @@ type VerifyTextParams struct {
 	Signature string
 }
 
-func VerifyTextWithParams(params VerifyTextParams) {
+func VerifyTextWithParams(params VerifyTextParams) error {
 	cert, err := loadCertificate(params.CertFile)
 	if err != nil {
-		log.Fatalf("Failed to load certificate: %v", err)
+		return fmt.Errorf("failed to load certificate: %v", err)
 	}
 	dss := NewDigitalSignatureServiceFromPublic(cert.PublicKey)
 	sigBytes, err := decodeBase64(params.Signature)
 	if err != nil {
-		log.Fatalf("Failed to decode signature: %v", err)
+		return fmt.Errorf("failed to decode signature: %v", err)
 	}
 	err = dss.VerifyText(params.Text, sigBytes)
 	if err != nil {
-		log.Fatalf("Text signature verification failed: %v", err)
+		return fmt.Errorf("text signature verification failed: %v", err)
 	}
 	fmt.Println("Text signature verification succeeded.")
+	return nil
 }
 
 type SignJSONParams struct {
@@ -384,31 +449,32 @@ type SignJSONParams struct {
 	OutSig  string
 }
 
-func SignJSONWithParams(params SignJSONParams) {
+func SignJSONWithParams(params SignJSONParams) error {
 	signer, err := loadPrivateKey(params.KeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load private key: %v", err)
+		return fmt.Errorf("failed to load private key: %v", err)
 	}
 	dss := NewDigitalSignatureService(signer)
 	var data interface{}
 	err = json.Unmarshal([]byte(params.JSONStr), &data)
 	if err != nil {
-		log.Fatalf("Failed to parse JSON: %v", err)
+		return fmt.Errorf("failed to parse JSON: %v", err)
 	}
 	sig, err := dss.SignJSON(data)
 	if err != nil {
-		log.Fatalf("Failed to sign JSON: %v", err)
+		return fmt.Errorf("failed to sign JSON: %v", err)
 	}
 	encodedSig := encodeBase64(sig)
 	if params.OutSig != "" {
 		err = os.WriteFile(params.OutSig, []byte(encodedSig), 0644)
 		if err != nil {
-			log.Fatalf("Failed to write signature to file: %v", err)
+			return fmt.Errorf("failed to write signature to file: %v", err)
 		}
 		fmt.Printf("JSON signature saved to %s\n", params.OutSig)
 	} else {
 		fmt.Printf("JSON Signature (base64): %s\n", encodedSig)
 	}
+	return nil
 }
 
 type VerifyJSONParams struct {
@@ -417,37 +483,35 @@ type VerifyJSONParams struct {
 	Signature string
 }
 
-func VerifyJSONWithParams(params VerifyJSONParams) {
+func VerifyJSONWithParams(params VerifyJSONParams) error {
 	cert, err := loadCertificate(params.CertFile)
 	if err != nil {
-		log.Fatalf("Failed to load certificate: %v", err)
+		return fmt.Errorf("failed to load certificate: %v", err)
 	}
 	dss := NewDigitalSignatureServiceFromPublic(cert.PublicKey)
 	var data interface{}
 	err = json.Unmarshal([]byte(params.JSONStr), &data)
 	if err != nil {
-		log.Fatalf("Failed to parse JSON: %v", err)
+		return fmt.Errorf("failed to parse JSON: %v", err)
 	}
 	sigBytes, err := decodeBase64(params.Signature)
 	if err != nil {
-		log.Fatalf("Failed to decode signature: %v", err)
+		return fmt.Errorf("failed to decode signature: %v", err)
 	}
 	err = dss.VerifyJSON(data, sigBytes)
 	if err != nil {
-		log.Fatalf("JSON signature verification failed: %v", err)
+		return fmt.Errorf("JSON signature verification failed: %v", err)
 	}
 	fmt.Println("JSON signature verification succeeded.")
+	return nil
 }
 
 type InspectParams struct {
 	CertFile string
 }
 
-func InspectCertificateWithParams(params InspectParams) {
-	err := inspectCertificate(params.CertFile)
-	if err != nil {
-		log.Fatalf("Inspection failed: %v", err)
-	}
+func InspectCertificateWithParams(params InspectParams) error {
+	return inspectCertificate(params.CertFile)
 }
 
 type ValidateParams struct {
@@ -455,26 +519,31 @@ type ValidateParams struct {
 	CACertFile     string
 }
 
-func ValidateClientCertificateWithParams(params ValidateParams) {
+func ValidateClientCertificateWithParams(params ValidateParams) error {
 	err := validateClientCert(params.ClientCertFile, params.CACertFile)
 	if err != nil {
-		log.Fatalf("Validation failed: %v", err)
+		return fmt.Errorf("validation failed: %v", err)
 	}
 	fmt.Println("Certificate validation succeeded.")
+	return nil
 }
 
-func generateCA(params CAParams) ([]byte, crypto.Signer) {
+func generateCA(params CAParams) ([]byte, crypto.Signer, error) {
 	privKey, err := generatePrivateKey("ECDSA", params.Curve)
 	if err != nil {
-		log.Fatal("CA key generation failed:", err)
+		return nil, nil, fmt.Errorf("cert CA key generation failed: %v", err)
 	}
 	subject := pkix.Name{
 		CommonName:   params.CommonName,
 		Organization: []string{params.OrganizationName},
 		Country:      []string{params.Country},
 	}
+	random, err := randomSerial()
+	if err != nil {
+		return nil, nil, fmt.Errorf("cert CA serial number generation failed: %v", err)
+	}
 	template := x509.Certificate{
-		SerialNumber:          randomSerial(),
+		SerialNumber:          random,
 		Subject:               subject,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0),
@@ -485,18 +554,22 @@ func generateCA(params CAParams) ([]byte, crypto.Signer) {
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, privKey.Public(), privKey)
 	if err != nil {
-		log.Fatal("CA cert creation failed:", err)
+		return nil, nil, fmt.Errorf("CA cert creation failed: %v", err)
 	}
-	return certBytes, privKey
+	return certBytes, privKey, nil
 }
 
-func generateServerCert(caCert *x509.Certificate, caKey crypto.Signer, keyType string, curveOrBits interface{}, commonName string, dnsNames []string, ips []net.IP) ([]byte, crypto.Signer) {
+func generateServerCert(caCert *x509.Certificate, caKey crypto.Signer, keyType string, curveOrBits interface{}, commonName string, dnsNames []string, ips []net.IP) ([]byte, crypto.Signer, error) {
 	privKey, err := generatePrivateKey(keyType, curveOrBits)
 	if err != nil {
-		log.Fatal("Server key generation failed:", err)
+		return nil, nil, fmt.Errorf("server key generation failed: %v", err)
+	}
+	random, err := randomSerial()
+	if err != nil {
+		return nil, nil, fmt.Errorf("CA serial number generation failed: %v", err)
 	}
 	template := x509.Certificate{
-		SerialNumber: randomSerial(),
+		SerialNumber: random,
 		Subject: pkix.Name{
 			CommonName: commonName,
 		},
@@ -509,18 +582,22 @@ func generateServerCert(caCert *x509.Certificate, caKey crypto.Signer, keyType s
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, privKey.Public(), caKey)
 	if err != nil {
-		log.Fatal("Server cert creation failed:", err)
+		return nil, nil, fmt.Errorf("server cert creation failed: %v", err)
 	}
-	return certBytes, privKey
+	return certBytes, privKey, nil
 }
 
-func generateClientCert(caCert *x509.Certificate, caKey crypto.Signer, commonName string) ([]byte, crypto.Signer) {
+func generateClientCert(caCert *x509.Certificate, caKey crypto.Signer, commonName string) ([]byte, crypto.Signer, error) {
 	privKey, err := generatePrivateKey("Ed25519", nil)
 	if err != nil {
-		log.Fatal("Client key generation failed:", err)
+		return nil, nil, fmt.Errorf("client key generation failed: %v", err)
+	}
+	random, err := randomSerial()
+	if err != nil {
+		return nil, nil, fmt.Errorf("cert CA serial number generation failed: %v", err)
 	}
 	template := x509.Certificate{
-		SerialNumber: randomSerial(),
+		SerialNumber: random,
 		Subject: pkix.Name{
 			CommonName: commonName,
 		},
@@ -531,18 +608,22 @@ func generateClientCert(caCert *x509.Certificate, caKey crypto.Signer, commonNam
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, privKey.Public(), caKey)
 	if err != nil {
-		log.Fatal("Client cert creation failed:", err)
+		return nil, nil, fmt.Errorf("client cert creation failed: %v", err)
 	}
-	return certBytes, privKey
+	return certBytes, privKey, nil
 }
 
-func generateCodeSigningCert(caCert *x509.Certificate, caKey crypto.Signer, rsaBits int, commonName string) ([]byte, crypto.Signer) {
+func generateCodeSigningCert(caCert *x509.Certificate, caKey crypto.Signer, rsaBits int, commonName string) ([]byte, crypto.Signer, error) {
 	privKey, err := generatePrivateKey("RSA", rsaBits)
 	if err != nil {
-		log.Fatal("Code signing key generation failed:", err)
+		return nil, nil, fmt.Errorf("code signing key generation failed: %v", err)
+	}
+	random, err := randomSerial()
+	if err != nil {
+		return nil, nil, fmt.Errorf("cert CA serial number generation failed: %v", err)
 	}
 	template := x509.Certificate{
-		SerialNumber: randomSerial(),
+		SerialNumber: random,
 		Subject: pkix.Name{
 			CommonName: commonName,
 		},
@@ -553,25 +634,29 @@ func generateCodeSigningCert(caCert *x509.Certificate, caKey crypto.Signer, rsaB
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, privKey.Public(), caKey)
 	if err != nil {
-		log.Fatal("Code signing cert creation failed:", err)
+		return nil, nil, fmt.Errorf("code signing cert creation failed: %v", err)
 	}
-	return certBytes, privKey
+	return certBytes, privKey, nil
 }
 
-func generateCRL(caCert *x509.Certificate, caKey crypto.Signer, revoked []pkix.RevokedCertificate) []byte {
+func generateCRL(caCert *x509.Certificate, caKey crypto.Signer, revoked []pkix.RevokedCertificate) ([]byte, error) {
+	random, err := randomSerial()
+	if err != nil {
+		return nil, fmt.Errorf("CA serial number generation failed: %v", err)
+	}
 	crlTemplate := &x509.RevocationList{
 		SignatureAlgorithm:  caCert.SignatureAlgorithm,
 		RevokedCertificates: revoked,
-		Number:              randomSerial(),
+		Number:              random,
 		ThisUpdate:          time.Now(),
 		NextUpdate:          time.Now().AddDate(0, 1, 0),
 		Issuer:              caCert.Subject,
 	}
 	crlBytes, err := x509.CreateRevocationList(rand.Reader, crlTemplate, caCert, caKey)
 	if err != nil {
-		log.Fatal("CRL creation failed:", err)
+		return nil, fmt.Errorf("CRL creation failed: %v", err)
 	}
-	return crlBytes
+	return crlBytes, nil
 }
 
 func generatePrivateKey(algo string, param interface{}) (crypto.Signer, error) {
@@ -609,61 +694,65 @@ func generatePrivateKey(algo string, param interface{}) (crypto.Signer, error) {
 	}
 }
 
-func randomSerial() *big.Int {
+func randomSerial() (*big.Int, error) {
 	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
-		log.Fatal("failed to generate serial number:", err)
+		return nil, fmt.Errorf("failed to generate serial number: %v", err)
 	}
-	return serial
+	return serial, nil
 }
 
-func saveCertificate(filename string, cert []byte) {
+func saveCertificate(filename string, cert []byte) error {
 	err := os.WriteFile(filename, pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: cert,
 	}), 0644)
 	if err != nil {
-		log.Fatal("Failed to save certificate:", err)
+		return fmt.Errorf("failed to save certificate: %v", err)
 	}
+	return nil
 }
 
-func savePrivateKey(filename string, key crypto.Signer) {
+func savePrivateKey(filename string, key crypto.Signer) error {
 	keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
-		log.Fatal("Failed to marshal private key:", err)
+		return fmt.Errorf("failed to marshal private key: %v", err)
 	}
 	err = os.WriteFile(filename, pem.EncodeToMemory(&pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: keyBytes,
 	}), 0600)
 	if err != nil {
-		log.Fatal("Failed to save private key:", err)
+		return fmt.Errorf("failed to save private key: %v", err)
 	}
+	return nil
 }
 
-func saveCRL(filename string, crl []byte) {
+func saveCRL(filename string, crl []byte) error {
 	err := os.WriteFile(filename, pem.EncodeToMemory(&pem.Block{
 		Type:  "X509 CRL",
 		Bytes: crl,
 	}), 0644)
 	if err != nil {
-		log.Fatal("Failed to save CRL:", err)
+		return fmt.Errorf("failed to save CRL: %v", err)
 	}
+	return nil
 }
 
-func signFileContent(filename string, signer crypto.Signer) {
+func signFileContent(filename string, signer crypto.Signer) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatal("Failed to read file for signing:", err)
+		return fmt.Errorf("failed to read file for signing: %v", err)
 	}
 	sig, err := signData(data, signer)
 	if err != nil {
-		log.Fatal("Failed to sign file content:", err)
+		return fmt.Errorf("failed to sign file content: %v", err)
 	}
 	err = os.WriteFile(filename+".sig", sig, 0644)
 	if err != nil {
-		log.Fatal("Failed to save signature file:", err)
+		return fmt.Errorf("failed to save signature file: %v", err)
 	}
+	return nil
 }
 
 func signData(data []byte, key crypto.Signer) ([]byte, error) {

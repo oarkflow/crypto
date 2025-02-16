@@ -1,0 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+.tabs {
+    overflow: hidden;
+    background-color: #333;
+}
+
+.tablink {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    color: #fff;
+    font-size: 17px;
+}
+
+.tablink:hover {
+    background-color: #ddd;
+    color: #000;
+}
+
+.tablink.active {
+    background-color: #555;
+    color: #fff;
+}
+
+.tabcontent {
+    display: none;
+    padding: 20px;
+    border-top: none;
+}
+
+form label {
+    display: inline-block;
+    width: 200px;
+    margin-top: 10px;
+}
+
+form input,
+form textarea {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 5px;
+    width: 300px;
+}
+
+button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+#response {
+    background: #e7f3fe;
+    border: 1px solid #8ecae6;
+    padding: 10px;
+    margin: 20px 0;
+    white-space: pre-wrap;
+}
