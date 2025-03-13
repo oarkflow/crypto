@@ -1,264 +1,1090 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Certificate Manager</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Enterprise Certificate Manager</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+        }
+        /* Sidebar Styles */
+        .sidebar {
+            background-color: #f8f9fa;
+            height: 100vh;
+            padding-top: 1rem;
+        }
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 4px;
+        }
+        /* Tab content sections */
+        .tabcontent {
+            display: none;
+        }
+        .tabcontent.active {
+            display: block;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+        }
+        /* Response Area */
+        #response {
+            white-space: pre-wrap;
+            background: #f1f1f1;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #ccc;
+        }
+        /* Certificate Picker Component */
+        .cert-picker > div {
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>Certificate Manager</h1>
-    <div class="tabs">
-        <!-- Navigation Tabs -->
-        <button class="tablink" onclick="openTab(event, 'gen-ca')">Generate CA</button>
-        <button class="tablink" onclick="openTab(event, 'gen-server')">Generate Server</button>
-        <button class="tablink" onclick="openTab(event, 'gen-client')">Generate Client</button>
-        <button class="tablink" onclick="openTab(event, 'gen-code-sign')">Code Sign Cert</button>
-        <button class="tablink" onclick="openTab(event, 'gen-crl')">Generate CRL</button>
-        <button class="tablink" onclick="openTab(event, 'verify-crl')">Verify CRL</button>
-        <button class="tablink" onclick="openTab(event, 'sign')">Sign File</button>
-        <button class="tablink" onclick="openTab(event, 'verify')">Verify File</button>
-        <button class="tablink" onclick="openTab(event, 'sign-text')">Sign Text</button>
-        <button class="tablink" onclick="openTab(event, 'verify-text')">Verify Text</button>
-        <button class="tablink" onclick="openTab(event, 'sign-json')">Sign JSON</button>
-        <button class="tablink" onclick="openTab(event, 'verify-json')">Verify JSON</button>
-        <button class="tablink" onclick="openTab(event, 'inspect')">Inspect Cert</button>
-        <button class="tablink" onclick="openTab(event, 'list-certs')">List Certs</button>
-        <button class="tablink" onclick="openTab(event, 'validate')">Validate Cert</button>
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">CertManager Enterprise</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="openTab(event, 'dashboard')">Dashboard</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-toggle="dropdown">
+                    Admin
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="#">Profile</a>
+                    <a class="dropdown-item" href="#">Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Logout</a>
+                </div>
+            </li>
+        </ul>
     </div>
+</nav>
 
-    <!-- Result display -->
-    <div id="response"></div>
+<!-- Main Layout -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" onclick="openTab(event, 'dashboard')">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'gen-ca')">Generate CA</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'gen-server')">Generate Server Cert</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'gen-client')">Generate Client Cert</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'gen-code-sign')">Code Sign Cert</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'gen-crl')">Generate CRL</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'verify-crl')">Verify CRL</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'sign')">Sign File</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'verify')">Verify File</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'sign-text')">Sign Text</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'verify-text')">Verify Text</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'sign-json')">Sign JSON</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'verify-json')">Verify JSON</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'inspect')">Inspect Cert</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'list-certs')">List Certs</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="openTab(event, 'validate')">Validate Cert</a></li>
+            </ul>
+        </nav>
 
-    <!-- Tab content for Generate CA -->
-    <div id="gen-ca" class="tabcontent">
-        <h2>Generate CA Certificate</h2>
-        <form id="genCAForm">
-            <label>Organization:</label>
-            <input type="text" name="OrganizationName" value="My Company" /><br />
-            <label>Country:</label>
-            <input type="text" name="Country" value="NP" /><br />
-            <label>Curve:</label>
-            <input type="text" name="Curve" value="P384" /><br />
-            <label>Common Name:</label>
-            <input type="text" name="CommonName" value="My Secure CA" /><br />
-            <label>Cert Out:</label>
-            <input type="text" name="CertOut" value="ca.crt" /><br />
-            <label>Key Out:</label>
-            <input type="text" name="KeyOut" value="ca.key" /><br />
-            <button type="button" onclick="submitForm('genCAForm', '/api/gen-ca')">Generate CA</button>
-        </form>
+        <!-- Main Content Area -->
+        <main class="col-md-10 ml-sm-auto col-lg-10 px-4">
+            <!-- API Response Area -->
+            <div id="response"></div>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="tabcontent active">
+                <div class="pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Dashboard</h1>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header">Active Certificates</div>
+                            <div class="card-body">
+                                <h5 class="card-title">120</h5>
+                                <p class="card-text">Certificates currently in use.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header">Expiring Soon</div>
+                            <div class="card-body">
+                                <h5 class="card-title">15</h5>
+                                <p class="card-text">Certificates expiring in the next 30 days.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header">Revoked Certificates</div>
+                            <div class="card-body">
+                                <h5 class="card-title">5</h5>
+                                <p class="card-text">Certificates that have been revoked.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate CA Certificate -->
+            <section id="gen-ca" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Generate CA Certificate</div>
+                    <div class="card-body">
+                        <form id="genCAForm">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Organization</label>
+                                    <input type="text" class="form-control" name="OrganizationName" value="My Company">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label>Country</label>
+                                    <input type="text" class="form-control" name="Country" value="NP">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Curve</label>
+                                    <input type="text" class="form-control" name="Curve" value="P384">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Common Name</label>
+                                    <input type="text" class="form-control" name="CommonName" value="My Secure CA">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Cert Out</label>
+                                    <input type="text" class="form-control" name="CertOut" value="ca.crt">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Key Out</label>
+                                    <input type="text" class="form-control" name="KeyOut" value="ca.key">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('genCAForm', '/api/gen-ca')">Generate CA</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate Server Certificate -->
+            <section id="gen-server" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Generate Server Certificate</div>
+                    <div class="card-body">
+                        <form id="genServerForm">
+                            <!-- CA Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CACertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CACertFile">
+                                </div>
+                            </div>
+                            <!-- CA Key File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CAKeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CAKeyFile">
+                                </div>
+                            </div>
+                            <!-- Other inputs -->
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Key Type</label>
+                                    <input type="text" class="form-control" name="KeyType" value="ECDSA">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Param (Curve or RSA bits)</label>
+                                    <input type="text" class="form-control" name="Param" value="P256">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Common Name</label>
+                                    <input type="text" class="form-control" name="CommonName" value="server.example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>DNS Names (comma separated)</label>
+                                    <input type="text" class="form-control" name="DNSNames" value="localhost,server.example.com">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>IP List (comma separated)</label>
+                                    <input type="text" class="form-control" name="IPList" value="127.0.0.1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Cert Out</label>
+                                    <input type="text" class="form-control" name="CertOut" value="server.crt">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Key Out</label>
+                                    <input type="text" class="form-control" name="KeyOut" value="server.key">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('genServerForm', '/api/gen-server')">Generate Server Cert</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate Client Certificate -->
+            <section id="gen-client" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Generate Client Certificate</div>
+                    <div class="card-body">
+                        <form id="genClientForm">
+                            <!-- CA Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CACertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CACertFile">
+                                </div>
+                            </div>
+                            <!-- CA Key File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CAKeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CAKeyFile">
+                                </div>
+                            </div>
+                            <!-- Other inputs -->
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Common Name</label>
+                                    <input type="text" class="form-control" name="CommonName" value="client-user">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Cert Out</label>
+                                    <input type="text" class="form-control" name="CertOut" value="client.crt">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Key Out</label>
+                                    <input type="text" class="form-control" name="KeyOut" value="client.key">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('genClientForm', '/api/gen-client')">Generate Client Cert</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate Code Signing Certificate -->
+            <section id="gen-code-sign" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Generate Code Signing Certificate</div>
+                    <div class="card-body">
+                        <form id="genCodeSignForm">
+                            <!-- CA Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CACertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CACertFile">
+                                </div>
+                            </div>
+                            <!-- CA Key File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CAKeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CAKeyFile">
+                                </div>
+                            </div>
+                            <!-- Other inputs -->
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Common Name</label>
+                                    <input type="text" class="form-control" name="CommonName" value="file-signer">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>RSA Bits</label>
+                                    <input type="text" class="form-control" name="RsaBits" value="2048">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Cert Out</label>
+                                    <input type="text" class="form-control" name="CertOut" value="code_sign.crt">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Key Out</label>
+                                <input type="text" class="form-control" name="KeyOut" value="code_sign.key">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('genCodeSignForm', '/api/gen-code-sign')">Generate Code Sign Cert</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate CRL -->
+            <section id="gen-crl" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Generate CRL</div>
+                    <div class="card-body">
+                        <form id="genCRLForm">
+                            <!-- CA Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CACertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CACertFile">
+                                </div>
+                            </div>
+                            <!-- CA Key File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CAKeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CAKeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CAKeyFile">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label>Revoked (comma separated)</label>
+                                    <input type="text" class="form-control" name="Revoked" value="">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>CRL Out</label>
+                                    <input type="text" class="form-control" name="CRLOut" value="ca.crl">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('genCRLForm', '/api/gen-crl')">Generate CRL</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Verify CRL -->
+            <section id="verify-crl" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Verify CRL</div>
+                    <div class="card-body">
+                        <form id="verifyCRLForm">
+                            <!-- Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CertFile">
+                                </div>
+                            </div>
+                            <!-- CRL File -->
+                            <div class="form-group cert-picker">
+                                <label>CRL File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CRLFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CRLFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CRLFile">
+                                        <option value="ca.crl">ca.crl</option>
+                                        <!-- Add other CRL file options if available -->
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CRLFile">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('verifyCRLForm', '/api/verify-crl')">Verify CRL</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sign File -->
+            <section id="sign" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Sign File</div>
+                    <div class="card-body">
+                        <form id="signForm">
+                            <div class="form-group">
+                                <label>File To Sign</label>
+                                <input type="text" class="form-control" name="FileToSign" value="">
+                            </div>
+                            <!-- Private Key File -->
+                            <div class="form-group cert-picker">
+                                <label>Private Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="KeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="KeyFile">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Signature Out (optional)</label>
+                                <input type="text" class="form-control" name="OutSig" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('signForm', '/api/sign')">Sign File</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Verify File -->
+            <section id="verify" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Verify File</div>
+                    <div class="card-body">
+                        <form id="verifyForm">
+                            <div class="form-group">
+                                <label>File To Verify</label>
+                                <input type="text" class="form-control" name="FileToVerify" value="">
+                            </div>
+                            <div class="form-group">
+                                <label>Signature File</label>
+                                <input type="text" class="form-control" name="SigFile" value="">
+                            </div>
+                            <!-- Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CertFile">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('verifyForm', '/api/verify')">Verify File</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sign Text -->
+            <section id="sign-text" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Sign Text</div>
+                    <div class="card-body">
+                        <form id="signTextForm">
+                            <!-- Private Key File -->
+                            <div class="form-group cert-picker">
+                                <label>Private Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="KeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="KeyFile">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Text to Sign</label>
+                                <textarea class="form-control" name="Text" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Signature Out (optional)</label>
+                                <input type="text" class="form-control" name="OutSig" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('signTextForm', '/api/sign-text')">Sign Text</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Verify Text -->
+            <section id="verify-text" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Verify Text</div>
+                    <div class="card-body">
+                        <form id="verifyTextForm">
+                            <!-- Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CertFile">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Text to Verify</label>
+                                <textarea class="form-control" name="Text" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Signature (base64)</label>
+                                <input type="text" class="form-control" name="Signature" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('verifyTextForm', '/api/verify-text')">Verify Text</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sign JSON -->
+            <section id="sign-json" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Sign JSON</div>
+                    <div class="card-body">
+                        <form id="signJSONForm">
+                            <!-- Private Key File -->
+                            <div class="form-group cert-picker">
+                                <label>Private Key File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="KeyFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="KeyFile">
+                                        <option value="ca.key">ca.key</option>
+                                        <option value="server.key">server.key</option>
+                                        <option value="client.key">client.key</option>
+                                        <option value="code_sign.key">code_sign.key</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="KeyFile">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>JSON String to Sign</label>
+                                <textarea class="form-control" name="JSONStr" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Signature Out (optional)</label>
+                                <input type="text" class="form-control" name="OutSig" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('signJSONForm', '/api/sign-json')">Sign JSON</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Verify JSON -->
+            <section id="verify-json" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Verify JSON</div>
+                    <div class="card-body">
+                        <form id="verifyJSONForm">
+                            <!-- Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CertFile">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>JSON String to Verify</label>
+                                <textarea class="form-control" name="JSONStr" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Signature (base64)</label>
+                                <input type="text" class="form-control" name="Signature" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('verifyJSONForm', '/api/verify-json')">Verify JSON</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inspect Certificate -->
+            <section id="inspect" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Inspect Certificate</div>
+                    <div class="card-body">
+                        <form id="inspectForm">
+                            <!-- Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CertFile">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('inspectForm', '/api/inspect')">Inspect</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- List Certificates -->
+            <section id="list-certs" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">List Certificates</div>
+                    <div class="card-body">
+                        <form id="listCertsForm">
+                            <div class="form-group">
+                                <label>Certificate Files (comma separated)</label>
+                                <input type="text" class="form-control" name="Files" value="">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('listCertsForm', '/api/list-certs')">List Certs</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Validate Certificate -->
+            <section id="validate" class="tabcontent">
+                <div class="card mb-4">
+                    <div class="card-header">Validate Client Certificate</div>
+                    <div class="card-body">
+                        <form id="validateForm">
+                            <!-- Client Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>Client Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="ClientCertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="ClientCertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="ClientCertFile">
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="ClientCertFile">
+                                </div>
+                            </div>
+                            <!-- CA Certificate File -->
+                            <div class="form-group cert-picker">
+                                <label>CA Certificate File</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="existing" checked>
+                                        <label class="form-check-label">Select Existing</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="CACertFileChoice" value="upload">
+                                        <label class="form-check-label">Upload New</label>
+                                    </div>
+                                </div>
+                                <div class="existingCertSelect">
+                                    <select class="form-control" name="CACertFile">
+                                        <option value="ca.crt">ca.crt</option>
+                                        <option value="server.crt">server.crt</option>
+                                        <option value="client.crt">client.crt</option>
+                                        <option value="code_sign.crt">code_sign.crt</option>
+                                    </select>
+                                </div>
+                                <div class="uploadCertInput" style="display:none;">
+                                    <input type="file" class="form-control-file" name="CACertFile">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitForm('validateForm', '/api/validate')">Validate</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
-
-    <!-- Tab content for Generate Server Certificate -->
-    <div id="gen-server" class="tabcontent">
-        <h2>Generate Server Certificate</h2>
-        <form id="genServerForm">
-            <label>CA Certificate File:</label>
-            <input type="text" name="CACertFile" value="ca.crt" /><br />
-            <label>CA Key File:</label>
-            <input type="text" name="CAKeyFile" value="ca.key" /><br />
-            <label>Key Type:</label>
-            <input type="text" name="KeyType" value="ECDSA" /><br />
-            <label>Param (Curve or RSA bits):</label>
-            <input type="text" name="Param" value="P256" /><br />
-            <label>Common Name:</label>
-            <input type="text" name="CommonName" value="server.example.com" /><br />
-            <label>DNS Names (comma separated):</label>
-            <input type="text" name="DNSNames" value="localhost,server.example.com" /><br />
-            <label>IP List (comma separated):</label>
-            <input type="text" name="IPList" value="127.0.0.1" /><br />
-            <label>Cert Out:</label>
-            <input type="text" name="CertOut" value="server.crt" /><br />
-            <label>Key Out:</label>
-            <input type="text" name="KeyOut" value="server.key" /><br />
-            <button type="button" onclick="submitForm('genServerForm', '/api/gen-server')">Generate Server Cert</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Generate Client Certificate -->
-    <div id="gen-client" class="tabcontent">
-        <h2>Generate Client Certificate</h2>
-        <form id="genClientForm">
-            <label>CA Certificate File:</label>
-            <input type="text" name="CACertFile" value="ca.crt" /><br />
-            <label>CA Key File:</label>
-            <input type="text" name="CAKeyFile" value="ca.key" /><br />
-            <label>Common Name:</label>
-            <input type="text" name="CommonName" value="client-user" /><br />
-            <label>Cert Out:</label>
-            <input type="text" name="CertOut" value="client.crt" /><br />
-            <label>Key Out:</label>
-            <input type="text" name="KeyOut" value="client.key" /><br />
-            <button type="button" onclick="submitForm('genClientForm', '/api/gen-client')">Generate Client Cert</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Generate Code Signing Certificate -->
-    <div id="gen-code-sign" class="tabcontent">
-        <h2>Generate Code Signing Certificate</h2>
-        <form id="genCodeSignForm">
-            <label>CA Certificate File:</label>
-            <input type="text" name="CACertFile" value="ca.crt" /><br />
-            <label>CA Key File:</label>
-            <input type="text" name="CAKeyFile" value="ca.key" /><br />
-            <label>Common Name:</label>
-            <input type="text" name="CommonName" value="file-signer" /><br />
-            <label>RSA Bits:</label>
-            <input type="text" name="RsaBits" value="2048" /><br />
-            <label>Cert Out:</label>
-            <input type="text" name="CertOut" value="code_sign.crt" /><br />
-            <label>Key Out:</label>
-            <input type="text" name="KeyOut" value="code_sign.key" /><br />
-            <button type="button" onclick="submitForm('genCodeSignForm', '/api/gen-code-sign')">Generate Code Sign Cert</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Generate CRL -->
-    <div id="gen-crl" class="tabcontent">
-        <h2>Generate CRL</h2>
-        <form id="genCRLForm">
-            <label>CA Certificate File:</label>
-            <input type="text" name="CACertFile" value="ca.crt" /><br />
-            <label>CA Key File:</label>
-            <input type="text" name="CAKeyFile" value="ca.key" /><br />
-            <label>Revoked (comma separated):</label>
-            <input type="text" name="Revoked" value="" /><br />
-            <label>CRL Out:</label>
-            <input type="text" name="CRLOut" value="ca.crl" /><br />
-            <button type="button" onclick="submitForm('genCRLForm', '/api/gen-crl')">Generate CRL</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Verify CRL -->
-    <div id="verify-crl" class="tabcontent">
-        <h2>Verify CRL</h2>
-        <form id="verifyCRLForm">
-            <label>Certificate File:</label>
-            <input type="text" name="CertFile" value="" /><br />
-            <label>CRL File:</label>
-            <input type="text" name="CRLFile" value="ca.crl" /><br />
-            <button type="button" onclick="submitForm('verifyCRLForm', '/api/verify-crl')">Verify CRL</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Sign File -->
-    <div id="sign" class="tabcontent">
-        <h2>Sign a File</h2>
-        <form id="signForm">
-            <label>File To Sign:</label>
-            <input type="text" name="FileToSign" value="" /><br />
-            <label>Private Key File:</label>
-            <input type="text" name="KeyFile" value="" /><br />
-            <label>Signature Out (optional):</label>
-            <input type="text" name="OutSig" value="" /><br />
-            <button type="button" onclick="submitForm('signForm', '/api/sign')">Sign File</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Verify File -->
-    <div id="verify" class="tabcontent">
-        <h2>Verify a File Signature</h2>
-        <form id="verifyForm">
-            <label>File To Verify:</label>
-            <input type="text" name="FileToVerify" value="" /><br />
-            <label>Signature File:</label>
-            <input type="text" name="SigFile" value="" /><br />
-            <label>Certificate File:</label>
-            <input type="text" name="CertFile" value="" /><br />
-            <button type="button" onclick="submitForm('verifyForm', '/api/verify')">Verify File</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Sign Text -->
-    <div id="sign-text" class="tabcontent">
-        <h2>Sign Text</h2>
-        <form id="signTextForm">
-            <label>Private Key File:</label>
-            <input type="text" name="KeyFile" value="" /><br />
-            <label>Text to Sign:</label>
-            <textarea name="Text" rows="4" cols="50"></textarea><br />
-            <label>Signature Out (optional):</label>
-            <input type="text" name="OutSig" value="" /><br />
-            <button type="button" onclick="submitForm('signTextForm', '/api/sign-text')">Sign Text</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Verify Text -->
-    <div id="verify-text" class="tabcontent">
-        <h2>Verify Text Signature</h2>
-        <form id="verifyTextForm">
-            <label>Certificate File:</label>
-            <input type="text" name="CertFile" value="" /><br />
-            <label>Text to Verify:</label>
-            <textarea name="Text" rows="4" cols="50"></textarea><br />
-            <label>Signature (base64):</label>
-            <input type="text" name="Signature" value="" /><br />
-            <button type="button" onclick="submitForm('verifyTextForm', '/api/verify-text')">Verify Text</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Sign JSON -->
-    <div id="sign-json" class="tabcontent">
-        <h2>Sign JSON Data</h2>
-        <form id="signJSONForm">
-            <label>Private Key File:</label>
-            <input type="text" name="KeyFile" value="" /><br />
-            <label>JSON String to Sign:</label>
-            <textarea name="JSONStr" rows="4" cols="50"></textarea><br />
-            <label>Signature Out (optional):</label>
-            <input type="text" name="OutSig" value="" /><br />
-            <button type="button" onclick="submitForm('signJSONForm', '/api/sign-json')">Sign JSON</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Verify JSON -->
-    <div id="verify-json" class="tabcontent">
-        <h2>Verify JSON Signature</h2>
-        <form id="verifyJSONForm">
-            <label>Certificate File:</label>
-            <input type="text" name="CertFile" value="" /><br />
-            <label>JSON String to Verify:</label>
-            <textarea name="JSONStr" rows="4" cols="50"></textarea><br />
-            <label>Signature (base64):</label>
-            <input type="text" name="Signature" value="" /><br />
-            <button type="button" onclick="submitForm('verifyJSONForm', '/api/verify-json')">Verify JSON</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Inspect Certificate -->
-    <div id="inspect" class="tabcontent">
-        <h2>Inspect Certificate</h2>
-        <form id="inspectForm">
-            <label>Certificate File:</label>
-            <input type="text" name="CertFile" value="" /><br />
-            <button type="button" onclick="submitForm('inspectForm', '/api/inspect')">Inspect</button>
-        </form>
-    </div>
-
-    <!-- Tab content for List Certificates -->
-    <div id="list-certs" class="tabcontent">
-        <h2>List Certificates</h2>
-        <form id="listCertsForm">
-            <label>Certificate Files (comma separated):</label>
-            <input type="text" name="Files" value="" /><br />
-            <button type="button" onclick="submitForm('listCertsForm', '/api/list-certs')">List Certs</button>
-        </form>
-    </div>
-
-    <!-- Tab content for Validate Certificate -->
-    <div id="validate" class="tabcontent">
-        <h2>Validate Client Certificate</h2>
-        <form id="validateForm">
-            <label>Client Certificate File:</label>
-            <input type="text" name="ClientCertFile" value="" /><br />
-            <label>CA Certificate File:</label>
-            <input type="text" name="CACertFile" value="" /><br />
-            <button type="button" onclick="submitForm('validateForm', '/api/validate')">Validate</button>
-        </form>
-    </div>
-
 </div>
-<script src="app.js"></script>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    // Function to switch between sections
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.querySelectorAll(".sidebar .nav-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        if(evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        }
+        // Scroll main area to the top
+        document.querySelector('main').scrollTop = 0;
+    }
+
+    // Enhanced submitForm to support file uploads (reading them as text)
+    function submitForm(formId, endpoint) {
+        var form = document.getElementById(formId);
+        var formData = new FormData(form);
+        var object = {};
+        var fileInputs = form.querySelectorAll("input[type='file']");
+        var fileReadPromises = [];
+
+        // Process file inputs asynchronously
+        fileInputs.forEach(fileInput => {
+            var name = fileInput.name;
+            if(fileInput.files && fileInput.files.length > 0 && !fileInput.disabled) {
+                var file = fileInput.files[0];
+                var reader = new FileReader();
+                var promise = new Promise((resolve, reject) => {
+                    reader.onload = function(e) {
+                        object[name] = e.target.result; // File content as text
+                        resolve();
+                    }
+                    reader.onerror = function(e) {
+                        reject(e);
+                    }
+                });
+                reader.readAsText(file);
+                fileReadPromises.push(promise);
+            }
+        });
+
+        // Process non-file inputs from FormData
+        formData.forEach((value, key) => {
+            // Only add if not already set by a file input
+            if(!(key in object)) {
+                object[key] = value;
+            }
+        });
+
+        // When all file reads are complete, submit the JSON payload
+        Promise.all(fileReadPromises).then(() => {
+            var json = JSON.stringify(object);
+            fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: json
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("response").innerText = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById("response").innerText = "Error: " + error;
+                });
+        }).catch(error => {
+            document.getElementById("response").innerText = "Error reading files: " + error;
+        });
+    }
+
+    // Toggle certificate picker inputs based on radio button selection
+    function initCertPickers() {
+        document.querySelectorAll('.cert-picker').forEach(picker => {
+            var existingRadio = picker.querySelector('input[type="radio"][value="existing"]');
+            var uploadRadio = picker.querySelector('input[type="radio"][value="upload"]');
+            var selectElem = picker.querySelector('.existingCertSelect select');
+            var fileInput = picker.querySelector('.uploadCertInput input[type="file"]');
+            // Set initial state
+            if(existingRadio.checked) {
+                selectElem.disabled = false;
+                fileInput.disabled = true;
+            } else {
+                selectElem.disabled = true;
+                fileInput.disabled = false;
+            }
+            // Add event listeners
+            existingRadio.addEventListener('change', function(){
+                if(this.checked) {
+                    picker.querySelector('.existingCertSelect').style.display = 'block';
+                    picker.querySelector('.uploadCertInput').style.display = 'none';
+                    selectElem.disabled = false;
+                    fileInput.disabled = true;
+                }
+            });
+            uploadRadio.addEventListener('change', function(){
+                if(this.checked) {
+                    picker.querySelector('.existingCertSelect').style.display = 'none';
+                    picker.querySelector('.uploadCertInput').style.display = 'block';
+                    selectElem.disabled = true;
+                    fileInput.disabled = false;
+                }
+            });
+        });
+    }
+
+    // Open default tab on page load and initialize cert pickers
+    document.addEventListener("DOMContentLoaded", function () {
+        var defaultTab = document.querySelector(".sidebar .nav-link.active");
+        if(defaultTab) {
+            defaultTab.click();
+        } else {
+            openTab({currentTarget: document.querySelector(".sidebar .nav-link")}, 'dashboard');
+        }
+        initCertPickers();
+    });
+</script>
 </body>
 </html>

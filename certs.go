@@ -159,7 +159,7 @@ type ServerParams struct {
 }
 
 func GenerateServerWithParams(params ServerParams) error {
-	caCert, err := loadCertificate(params.CACertFile)
+	caCert, err := LoadCertificate(params.CACertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
@@ -223,7 +223,7 @@ type ClientParams struct {
 }
 
 func GenerateClientWithParams(params ClientParams) error {
-	caCert, err := loadCertificate(params.CACertFile)
+	caCert, err := LoadCertificate(params.CACertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
@@ -262,7 +262,7 @@ type CodeSignParams struct {
 }
 
 func GenerateCodeSignWithParams(params CodeSignParams) error {
-	caCert, err := loadCertificate(params.CACertFile)
+	caCert, err := LoadCertificate(params.CACertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
@@ -315,7 +315,7 @@ func GenerateCRLWithParams(params CRLParams) error {
 		})
 	}
 
-	caCert, err := loadCertificate(params.CACertFile)
+	caCert, err := LoadCertificate(params.CACertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load CA certificate: %v", err)
 	}
@@ -378,7 +378,7 @@ type VerifyParams struct {
 }
 
 func VerifyFileSignatureWithParams(params VerifyParams) error {
-	cert, err := loadCertificate(params.CertFile)
+	cert, err := LoadCertificate(params.CertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load certificate: %v", err)
 	}
@@ -426,7 +426,7 @@ type VerifyTextParams struct {
 }
 
 func VerifyTextWithParams(params VerifyTextParams) error {
-	cert, err := loadCertificate(params.CertFile)
+	cert, err := LoadCertificate(params.CertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load certificate: %v", err)
 	}
@@ -484,7 +484,7 @@ type VerifyJSONParams struct {
 }
 
 func VerifyJSONWithParams(params VerifyJSONParams) error {
-	cert, err := loadCertificate(params.CertFile)
+	cert, err := LoadCertificate(params.CertFile)
 	if err != nil {
 		return fmt.Errorf("failed to load certificate: %v", err)
 	}
@@ -510,7 +510,7 @@ type InspectParams struct {
 	CertFile string
 }
 
-func InspectCertificateWithParams(params InspectParams) error {
+func InspectCertificateWithParams(params InspectParams) (*CertInfo, error) {
 	return inspectCertificate(params.CertFile)
 }
 
@@ -808,7 +808,7 @@ func verifyFileContentSignature(filename, sigFilename string, pub crypto.PublicK
 	return verifyDataSignature(data, sig, pub)
 }
 
-func loadCertificate(filename string) (*x509.Certificate, error) {
+func LoadCertificate(filename string) (*x509.Certificate, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -841,11 +841,11 @@ func loadPrivateKey(filename string) (crypto.Signer, error) {
 }
 
 func validateClientCert(clientCertPath, caCertPath string) error {
-	caCert, err := loadCertificate(caCertPath)
+	caCert, err := LoadCertificate(caCertPath)
 	if err != nil {
 		return err
 	}
-	clientCert, err := loadCertificate(clientCertPath)
+	clientCert, err := LoadCertificate(clientCertPath)
 	if err != nil {
 		return err
 	}
@@ -863,23 +863,47 @@ func validateClientCert(clientCertPath, caCertPath string) error {
 	return nil
 }
 
-func inspectCertificate(filename string) error {
-	cert, err := loadCertificate(filename)
+type CertInfo struct {
+	File         string `json:"file"`
+	Subject      any    `json:"subject"`
+	Issuer       any    `json:"issuer"`
+	SerialNumber any    `json:"serial_number"`
+	NotBefore    any    `json:"not_before"`
+	NotAfter     any    `json:"not_after"`
+	KeyUsage     any    `json:"key_usage"`
+}
+
+func (cert *CertInfo) String() string {
+	var str strings.Builder
+	str.WriteString(fmt.Sprintf("Certificate: %s\n", cert.File))
+	str.WriteString(fmt.Sprintf("  Subject: %s\n", cert.Subject))
+	str.WriteString(fmt.Sprintf("  Issuer: %s\n", cert.Issuer))
+	str.WriteString(fmt.Sprintf("  Serial: %s\n", cert.SerialNumber))
+	str.WriteString(fmt.Sprintf("  Valid From: %s\n", cert.NotBefore))
+	str.WriteString(fmt.Sprintf("  Valid To  : %s\n", cert.NotAfter))
+	str.WriteString(fmt.Sprintf("  Key Usage : %v\n", cert.KeyUsage))
+	return str.String()
+}
+
+func inspectCertificate(filename string) (*CertInfo, error) {
+	cert, err := LoadCertificate(filename)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Printf("Certificate: %s\n", filename)
-	fmt.Printf("  Subject: %s\n", cert.Subject)
-	fmt.Printf("  Issuer: %s\n", cert.Issuer)
-	fmt.Printf("  Serial: %s\n", cert.SerialNumber)
-	fmt.Printf("  Valid From: %s\n", cert.NotBefore)
-	fmt.Printf("  Valid To  : %s\n", cert.NotAfter)
-	fmt.Printf("  Key Usage : %v\n", cert.KeyUsage)
-	return nil
+	info := &CertInfo{
+		File:         filename,
+		Subject:      cert.Subject,
+		Issuer:       cert.Issuer,
+		SerialNumber: cert.SerialNumber,
+		NotBefore:    cert.NotBefore,
+		NotAfter:     cert.NotAfter,
+		KeyUsage:     cert.KeyUsage,
+	}
+	return info, nil
 }
 
 func VerifyCertificateRevocationStatus(certFile, crlFile string) error {
-	cert, err := loadCertificate(certFile)
+	cert, err := LoadCertificate(certFile)
 	if err != nil {
 		return err
 	}

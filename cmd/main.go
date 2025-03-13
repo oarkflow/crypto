@@ -465,7 +465,12 @@ func (cmd InspectCommand) Handle(ctx contracts.Context) error {
 	params := crypto.InspectParams{
 		CertFile: ctx.Option("cert"),
 	}
-	return crypto.InspectCertificateWithParams(params)
+	cert, err := crypto.InspectCertificateWithParams(params)
+	if err != nil {
+		return err
+	}
+	fmt.Println(cert.String())
+	return nil
 }
 
 // ValidateCommand implements the "validate" command.
@@ -560,10 +565,11 @@ func (cmd ListCertsCommand) Handle(ctx contracts.Context) error {
 		f = strings.TrimSpace(f)
 		fmt.Printf("----- Certificate: %s -----\n", f)
 		params := crypto.InspectParams{CertFile: f}
-		err := crypto.InspectCertificateWithParams(params)
+		cert, err := crypto.InspectCertificateWithParams(params)
 		if err != nil {
 			return err
 		}
+		fmt.Println(cert.String())
 	}
 	return nil
 }

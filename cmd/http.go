@@ -259,10 +259,15 @@ func listCertsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	files := strings.Split(input.Files, ",")
-	var details []string
+	var details []*crypto.CertInfo
 	for _, f := range files {
 		f = strings.TrimSpace(f)
-		details = append(details, fmt.Sprintf("Details for certificate %s", f))
+		cert, err := crypto.InspectCertificateWithParams(crypto.InspectParams{CertFile: f})
+		if err != nil {
+			jsonResponse(w, response{Status: "error", Error: err.Error()})
+			return
+		}
+		details = append(details, cert)
 	}
 	jsonResponse(w, response{Status: "success", Data: details})
 }
